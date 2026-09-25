@@ -40,9 +40,15 @@ const stories = [
 export const shows: Show[] = stories.map(({ title, description }, index) => {
   const image = images[`../assets/shows/show-${String(index + 1).padStart(2, "0")}.jpg`];
   if (!image) throw new Error(`Capa não encontrada para ${title}`);
-  const source: Show["source"] = index === 13
-    ? { type: "video", url: "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4" }
-    : { type: "youtube", id: "M7lc1UVf-VE" };
+  const videoIds = [
+    "KYnJgXk8-50", "4WPfp7Lsh4E", "k6txq1qN8GA", "7nb50U07Bvc",
+    "TV7V8fUwjD4", "giL4Ma5iElw", "C26dmGQ_6rI", "6g6IZO9n4ts",
+    "g0x62QTzb3w", "qD-V3NTrG0M", "5hYPncIvaUE", "yU8iIemAG2Y",
+    "vqKjcfSp1d8", "vOLKr7EwKyU", "FiFC5Swbs_8", "8wH5e_WRPXY",
+    "Wx7CNCy6aj0", "V0NeZg6a2Vw", "inaUAxAm5lI", "bxtq0uvtKx0",
+    "exF54X5bmA0", "JMHhJLc1Vnc", "DiMxpUOegwA", "0gc0zfSsYlA",
+  ];
+  const source: Show["source"] = { type: "youtube", id: videoIds[index] };
   return {
   id: index + 1,
   title,
