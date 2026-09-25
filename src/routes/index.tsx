@@ -54,7 +54,7 @@ function Index() {
             <span className="mb-3 inline-flex rounded-full bg-primary px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-primary-foreground">Em destaque</span>
             <h1 className="max-w-2xl text-4xl font-black leading-tight sm:text-6xl lg:text-7xl">O Foguete do Formiguinha</h1>
             <p className="mt-4 max-w-lg text-base font-semibold text-foreground/85 sm:text-lg">Uma pequena astronauta e uma missão enorme: encontrar a flor mais brilhante da Lua.</p>
-            <Button size="lg" className="mt-6" onClick={() => setActive(featured)}><Play className="size-5 fill-current" /> Assistir</Button>
+            <div className="mt-6 flex flex-wrap gap-3"><Button size="lg" onClick={() => setActive(featured)}><Play className="size-5 fill-current" /> Assistir</Button><Button variant="glass" size="lg" className="sm:hidden" onClick={install}><Download className="size-5" /> Instalar</Button></div>
           </div>
         </section>
         <div id="categorias" className="relative z-20 -mt-8 space-y-9 md:-mt-12">
