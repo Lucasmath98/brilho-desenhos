@@ -48,7 +48,7 @@ export const shows: Show[] = stories.map(({ title, description }, index) => {
     "Wx7CNCy6aj0", "V0NeZg6a2Vw", "inaUAxAm5lI", "bxtq0uvtKx0",
     "exF54X5bmA0", "JMHhJLc1Vnc", "DiMxpUOegwA", "0gc0zfSsYlA",
   ];
-  const source: Show["source"] = { type: "youtube", id: videoIds[index] };
+  const source: Show["source"] = { type: "youtube", id: videoIds[index]! };
   return {
   id: index + 1,
   title,
