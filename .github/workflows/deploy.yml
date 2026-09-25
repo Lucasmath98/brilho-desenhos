@@ -22,13 +22,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
-      - run: npm run build
+      # bun.lock fixa as mesmas versões usadas no Lovable (npm install puxava versões diferentes)
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build
         env:
           GITHUB_PAGES: "true"
       - name: Prepare Pages folder
         run: |
-          if [ -d dist/client ]; then OUT=dist/client; else OUT=dist; fi
+          IDX=$(find dist .output -name index.html -not -path "*/server/*" 2>/dev/null | awk '{print length, $0}' | sort -n | head -1 | cut -d' ' -f2-)
+          if [ -z "$IDX" ]; then echo "index.html não gerado"; find dist .output -maxdepth 3 2>/dev/null; exit 1; fi
+          OUT=$(dirname "$IDX"); echo "Publicando $OUT"
           rm -rf pages && cp -r "$OUT" pages
           cp dist/sw.js dist/workbox-*.js pages/ 2>/dev/null || true
           cp pages/index.html pages/404.html
