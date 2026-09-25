@@ -301,7 +301,8 @@ function BottomNav({ active, onHome, onCategories, onProfile }: { active: Screen
 
 function VideoPlayer({ show, onClose }: { show: Show; onClose: () => void }) {
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
+
   const [progress, setProgress] = useState(show.progress ?? 0);
   const video = useRef<HTMLVideoElement>(null);
   const iframe = useRef<HTMLIFrameElement>(null);
@@ -322,7 +323,7 @@ function VideoPlayer({ show, onClose }: { show: Show; onClose: () => void }) {
       <div ref={player} className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-background shadow-app">
         <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-4 py-4"><Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar player" className="rounded-full bg-card"><X /></Button><div className="min-w-0"><p className="text-[10px] font-black uppercase text-primary">Assistindo agora</p><h1 className="font-display truncate text-xl">{show.title}</h1></div></header>
         <div className="relative flex flex-1 items-center overflow-hidden bg-player-surface">
-          {show.source.type === "youtube" ? <iframe ref={iframe} title={show.title} className="aspect-video w-full" src={`https://www.youtube-nocookie.com/embed/${show.source.id}?autoplay=1&controls=0&rel=0&modestbranding=1&enablejsapi=1&playsinline=1`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <video ref={video} autoPlay playsInline muted={muted} src={show.source.url} className="w-full" onTimeUpdate={(event) => { const duration = event.currentTarget.duration; if (duration) setProgress((event.currentTarget.currentTime / duration) * 100); }} />}
+          {show.source.type === "youtube" ? <iframe ref={iframe} title={show.title} className="aspect-video w-full" src={`https://www.youtube-nocookie.com/embed/${show.source.id}?autoplay=1&controls=0&rel=0&modestbranding=1&enablejsapi=1&playsinline=1&mute=1${typeof window !== "undefined" ? `&origin=${encodeURIComponent(window.location.origin)}` : ""}`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <video ref={video} autoPlay playsInline muted={muted} src={show.source.url} className="w-full" onTimeUpdate={(event) => { const duration = event.currentTarget.duration; if (duration) setProgress((event.currentTarget.currentTime / duration) * 100); }} />}
         </div>
         <div className="bg-card px-5 pb-8 pt-5">
           <input aria-label="Progresso do vídeo" type="range" min="0" max="100" value={progress} onChange={(event) => { const value = Number(event.target.value); setProgress(value); if (video.current?.duration) video.current.currentTime = video.current.duration * value / 100; }} className="h-1 w-full accent-primary" />
