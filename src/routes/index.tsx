@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Home, Search, Shapes, UserRound, Play, Pause, Volume2, VolumeX, X, ChevronLeft, ChevronRight, Maximize, Share } from "lucide-react";
+import { Download, Home, Search, Shapes, UserRound, Play, Pause, Volume2, VolumeX, X, ChevronLeft, ChevronRight, Maximize, Share, Sparkles, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { shelves, shows, type Show } from "@/lib/catalog";
 import { registerAppServiceWorker } from "@/lib/pwa";
@@ -47,7 +47,8 @@ function Index() {
     <main className="min-h-screen bg-background pb-24 text-foreground md:pb-8">
       <Header searchOpen={searchOpen} setSearchOpen={setSearchOpen} query={query} setQuery={setQuery} install={install} />
       {searchOpen && query ? <SearchResults shows={filtered} onPlay={setActive} /> : <>
-        <section id="inicio" className="relative flex min-h-[78svh] items-end overflow-hidden md:min-h-[82vh]">
+        <MobileHome onPlay={setActive} install={install} />
+        <section id="inicio" className="relative hidden min-h-[82vh] items-end overflow-hidden min-[481px]:flex">
           <img src={heroImage} alt="Formiguinha astronauta ao lado de seu foguete" width={768} height={432} className="absolute inset-0 size-full object-cover" />
           <div className="absolute inset-0 bg-[linear-gradient(to_top,var(--background)_2%,transparent_70%),linear-gradient(to_right,var(--background)_0%,transparent_75%)]" />
           <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 pb-16 sm:px-8 md:pb-24 lg:px-14">
@@ -57,7 +58,7 @@ function Index() {
             <div className="mt-6 flex flex-wrap gap-3"><Button size="lg" onClick={() => setActive(featured)}><Play className="size-5 fill-current" /> Assistir</Button><Button variant="glass" size="lg" className="sm:hidden" onClick={install}><Download className="size-5" /> Instalar</Button></div>
           </div>
         </section>
-        <div id="categorias" className="relative z-20 -mt-8 space-y-9 md:-mt-12">
+        <div id="categorias" className="relative z-20 space-y-9 max-[480px]:pt-3 min-[481px]:-mt-8 md:-mt-12">
           {shelves.map((shelf, index) => <Shelf key={shelf.title} shelf={shelf} delay={index} onPlay={setActive} />)}
         </div>
       </>}
@@ -66,6 +67,33 @@ function Index() {
       {showIos && <div className="fixed inset-x-4 bottom-24 z-[70] mx-auto max-w-sm rounded-lg border border-border bg-surface-raised p-4 shadow-2xl"><button aria-label="Fechar instruções" onClick={() => setShowIos(false)} className="float-right text-muted-foreground"><X /></button><p className="font-extrabold">Instalar no iPhone</p><p className="mt-2 text-sm text-muted-foreground">Toque em <Share className="mx-1 inline size-4" /> Compartilhar e depois em “Adicionar à Tela de Início”.</p></div>}
     </main>
   );
+}
+
+function MobileHome({ onPlay, install }: { onPlay: (show: Show) => void; install: () => void }) {
+  const newest = shows.find((show) => show.id === 19);
+  const popular = shows.find((show) => show.id === 2);
+  return <section id="inicio-mobile" className="px-4 pb-6 pt-24 min-[481px]:hidden">
+    <p className="text-lg font-extrabold text-muted-foreground">Oi, pequeno explorador! <span aria-hidden="true">👋</span></p>
+    <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-y border-border py-4">
+      <strong className="text-5xl font-black text-primary">24</strong>
+      <span className="max-w-32 text-sm font-bold leading-tight text-foreground">desenhos disponíveis</span>
+    </div>
+    <h1 className="mt-7 text-3xl font-black leading-tight">Desenhos Animados para Toda Família</h1>
+    <p className="mt-3 max-w-sm text-sm font-semibold leading-relaxed text-muted-foreground">Aventuras divertidas, histórias educativas e novos amigos para curtir juntos.</p>
+    <div className="mt-7 grid grid-cols-2 gap-3">
+      {newest && <button onClick={() => onPlay(newest)} className="group relative aspect-[4/5] overflow-hidden rounded-lg text-left" aria-label="Ver Novidades da Semana">
+        <img src={newest.image} alt="" width={768} height={432} className="size-full object-cover transition-transform duration-300 group-active:scale-105" />
+        <span className="absolute inset-0 bg-[linear-gradient(transparent_30%,var(--background))]" />
+        <span className="absolute inset-x-3 bottom-3"><Sparkles className="mb-2 size-6 text-primary"/><strong className="block text-lg leading-tight">Novidades da Semana</strong><small className="mt-1 block font-bold text-muted-foreground">Ver seleção</small></span>
+      </button>}
+      {popular && <button onClick={() => onPlay(popular)} className="group relative aspect-[4/5] overflow-hidden rounded-lg text-left" aria-label="Ver Mais Assistidos">
+        <img src={popular.image} alt="" width={768} height={432} className="size-full object-cover transition-transform duration-300 group-active:scale-105" />
+        <span className="absolute inset-0 bg-[linear-gradient(transparent_30%,var(--background))]" />
+        <span className="absolute inset-x-3 bottom-3"><Flame className="mb-2 size-6 text-primary"/><strong className="block text-lg leading-tight">Mais Assistidos</strong><small className="mt-1 block font-bold text-muted-foreground">Ver seleção</small></span>
+      </button>}
+    </div>
+    <Button variant="glass" className="mt-4 w-full" onClick={install}><Download className="size-5" /> Instalar Appflix</Button>
+  </section>;
 }
 
 function Header({ searchOpen, setSearchOpen, query, setQuery, install }: { searchOpen: boolean; setSearchOpen: (v: boolean) => void; query: string; setQuery: (v: string) => void; install: () => void }) {
@@ -88,7 +116,7 @@ function ShowCard({ show, onPlay }: { show: Show; onPlay: (show: Show) => void }
 
 function SearchResults({ shows: results, onPlay }: { shows: Show[]; onPlay: (show: Show)=>void }) { return <section className="mx-auto min-h-screen max-w-[1600px] px-4 pb-24 pt-24 sm:px-8 lg:px-14"><h1 className="text-3xl font-black">Buscar</h1><p className="mt-2 text-muted-foreground">{results.length} resultado(s)</p><div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">{results.map(show=><ShowCard key={show.id} show={show} onPlay={onPlay}/>)}</div></section> }
 
-function BottomNav({ onSearch, install }: { onSearch: ()=>void; install: ()=>void }) { const items = [{label:"Início",icon:Home,action:()=>location.hash="inicio"},{label:"Buscar",icon:Search,action:onSearch},{label:"Categorias",icon:Shapes,action:()=>location.hash="categorias"},{label:"Perfil",icon:UserRound,action:install}]; return <nav className="fixed inset-x-0 bottom-0 z-50 grid h-20 grid-cols-4 border-t border-border bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">{items.map(({label,icon:Icon,action})=><button key={label} onClick={action} className="flex min-w-0 flex-col items-center justify-center gap-1 text-[11px] font-bold text-muted-foreground first:text-primary"><Icon className="size-6"/><span className="truncate">{label}</span></button>)}</nav> }
+function BottomNav({ onSearch: _onSearch, install }: { onSearch: ()=>void; install: ()=>void }) { const items = [{label:"Início",icon:Home,action:()=>location.hash="inicio-mobile"},{label:"Categorias",icon:Shapes,action:()=>location.hash="categorias"},{label:"Perfil",icon:UserRound,action:install}]; return <nav className="fixed inset-x-0 bottom-0 z-50 grid h-20 grid-cols-3 border-t border-border bg-background/95 px-4 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl min-[481px]:hidden">{items.map(({label,icon:Icon,action})=><button key={label} onClick={action} className="flex min-w-0 flex-col items-center justify-center gap-1 text-[11px] font-bold text-muted-foreground first:text-primary"><Icon className="size-6"/><span className="truncate">{label}</span></button>)}</nav> }
 
 function VideoPlayer({ show, onClose }: { show: Show; onClose: ()=>void }) {
   const [playing,setPlaying]=useState(true); const [muted,setMuted]=useState(false); const [progress,setProgress]=useState(12); const video=useRef<HTMLVideoElement>(null); const iframe=useRef<HTMLIFrameElement>(null);
