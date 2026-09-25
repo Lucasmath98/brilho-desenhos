@@ -30,6 +30,7 @@ jobs:
         run: |
           if [ -d dist/client ]; then OUT=dist/client; else OUT=dist; fi
           rm -rf pages && cp -r "$OUT" pages
+          cp dist/sw.js dist/workbox-*.js pages/ 2>/dev/null || true
           cp pages/index.html pages/404.html
           touch pages/.nojekyll
       - uses: actions/upload-pages-artifact@v3
