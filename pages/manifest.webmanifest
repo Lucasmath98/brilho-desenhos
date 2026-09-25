@@ -1,0 +1,26 @@
+{
+  "name": "Appflix",
+  "short_name": "Appflix",
+  "description": "Desenhos para pequenas grandes imaginações.",
+  "start_url": "./",
+  "id": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1420",
+  "theme_color": "#0f1420",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/appflix-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/appflix-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
