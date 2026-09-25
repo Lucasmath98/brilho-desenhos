@@ -47,7 +47,7 @@ function Index() {
     <main className="min-h-screen bg-background pb-24 text-foreground md:pb-8">
       <Header searchOpen={searchOpen} setSearchOpen={setSearchOpen} query={query} setQuery={setQuery} install={install} />
       {searchOpen && query ? <SearchResults shows={filtered} onPlay={setActive} /> : <>
-        <MobileHome onPlay={setActive} install={install} />
+        <MobileHome install={install} />
         <section id="inicio" className="relative hidden min-h-[82vh] items-end overflow-hidden min-[481px]:flex">
           <img src={heroImage} alt="Formiguinha astronauta ao lado de seu foguete" width={768} height={432} className="absolute inset-0 size-full object-cover" />
           <div className="absolute inset-0 bg-[linear-gradient(to_top,var(--background)_2%,transparent_70%),linear-gradient(to_right,var(--background)_0%,transparent_75%)]" />
@@ -69,7 +69,7 @@ function Index() {
   );
 }
 
-function MobileHome({ onPlay, install }: { onPlay: (show: Show) => void; install: () => void }) {
+function MobileHome({ install }: { install: () => void }) {
   const newest = shows.find((show) => show.id === 19);
   const popular = shows.find((show) => show.id === 2);
   return <section id="inicio-mobile" className="px-4 pb-6 pt-24 min-[481px]:hidden">
@@ -81,12 +81,12 @@ function MobileHome({ onPlay, install }: { onPlay: (show: Show) => void; install
     <h1 className="mt-7 text-3xl font-black leading-tight">Desenhos Animados para Toda Família</h1>
     <p className="mt-3 max-w-sm text-sm font-semibold leading-relaxed text-muted-foreground">Aventuras divertidas, histórias educativas e novos amigos para curtir juntos.</p>
     <div className="mt-7 grid grid-cols-2 gap-3">
-      {newest && <button onClick={() => onPlay(newest)} className="group relative aspect-[4/5] overflow-hidden rounded-lg text-left" aria-label="Ver Novidades da Semana">
+      {newest && <button onClick={() => { location.hash = "desenhos-em-alta" }} className="group relative aspect-[4/5] overflow-hidden rounded-lg text-left" aria-label="Ver Novidades da Semana">
         <img src={newest.image} alt="" width={768} height={432} className="size-full object-cover transition-transform duration-300 group-active:scale-105" />
         <span className="absolute inset-0 bg-[linear-gradient(transparent_30%,var(--background))]" />
         <span className="absolute inset-x-3 bottom-3"><Sparkles className="mb-2 size-6 text-primary"/><strong className="block text-lg leading-tight">Novidades da Semana</strong><small className="mt-1 block font-bold text-muted-foreground">Ver seleção</small></span>
       </button>}
-      {popular && <button onClick={() => onPlay(popular)} className="group relative aspect-[4/5] overflow-hidden rounded-lg text-left" aria-label="Ver Mais Assistidos">
+      {popular && <button onClick={() => { location.hash = "continue-assistindo" }} className="group relative aspect-[4/5] overflow-hidden rounded-lg text-left" aria-label="Ver Mais Assistidos">
         <img src={popular.image} alt="" width={768} height={432} className="size-full object-cover transition-transform duration-300 group-active:scale-105" />
         <span className="absolute inset-0 bg-[linear-gradient(transparent_30%,var(--background))]" />
         <span className="absolute inset-x-3 bottom-3"><Flame className="mb-2 size-6 text-primary"/><strong className="block text-lg leading-tight">Mais Assistidos</strong><small className="mt-1 block font-bold text-muted-foreground">Ver seleção</small></span>
@@ -107,7 +107,8 @@ function Shelf({ shelf, onPlay, delay }: { shelf: typeof shelves[number]; onPlay
   const rail = useRef<HTMLDivElement>(null);
   const items = shelf.ids.map((id) => shows.find((show) => show.id === id)).filter((show): show is Show => Boolean(show));
   const move = (dir: number) => rail.current?.scrollBy({ left: dir * rail.current.clientWidth * .8, behavior: "smooth" });
-  return <section className="shelf-reveal" style={{ animationDelay: `${delay * 55}ms` }}><div className="mb-3 flex items-center justify-between px-4 sm:px-8 lg:px-14"><h2 className="text-xl font-black sm:text-2xl">{shelf.title}</h2><div className="hidden gap-1 md:flex"><Button variant="ghost" size="icon" aria-label="Voltar" onClick={()=>move(-1)}><ChevronLeft/></Button><Button variant="ghost" size="icon" aria-label="Avançar" onClick={()=>move(1)}><ChevronRight/></Button></div></div><div ref={rail} className="hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:px-8 lg:px-14">{items.map((show)=><ShowCard key={show.id} show={show} onPlay={onPlay}/>)}</div></section>;
+  const sectionId = shelf.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return <section id={sectionId} className="shelf-reveal scroll-mt-20" style={{ animationDelay: `${delay * 55}ms` }}><div className="mb-3 flex items-center justify-between px-4 sm:px-8 lg:px-14"><h2 className="text-xl font-black sm:text-2xl">{shelf.title}</h2><div className="hidden gap-1 md:flex"><Button variant="ghost" size="icon" aria-label="Voltar" onClick={()=>move(-1)}><ChevronLeft/></Button><Button variant="ghost" size="icon" aria-label="Avançar" onClick={()=>move(1)}><ChevronRight/></Button></div></div><div ref={rail} className="hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:px-8 lg:px-14">{items.map((show)=><ShowCard key={show.id} show={show} onPlay={onPlay}/>)}</div></section>;
 }
 
 function ShowCard({ show, onPlay }: { show: Show; onPlay: (show: Show) => void }) {
