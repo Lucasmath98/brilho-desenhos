@@ -41,7 +41,7 @@ export const shows: Show[] = stories.map(({ title, description }, index) => {
   const image = images[`../assets/shows/show-${String(index + 1).padStart(2, "0")}.jpg`];
   if (!image) throw new Error(`Capa não encontrada para ${title}`);
   const source: Show["source"] = index === 13
-    ? { type: "video", url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" }
+    ? { type: "video", url: "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4" }
     : { type: "youtube", id: "M7lc1UVf-VE" };
   return {
   id: index + 1,
