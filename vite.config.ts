@@ -8,7 +8,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 
 // GitHub Pages: build estático servido em /brilho-desenhos/ (ativado via GITHUB_PAGES=true no workflow)
-const isGhPages = process.env.GITHUB_PAGES === "true";
+const isGhPages = process.env["GITHUB_PAGES"] === "true";
 const base = isGhPages ? "/brilho-desenhos/" : "/";
 
 export default defineConfig({
