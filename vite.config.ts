@@ -7,8 +7,13 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 
+// GitHub Pages: build estático servido em /brilho-desenhos/ (ativado via GITHUB_PAGES=true no workflow)
+const isGhPages = process.env["GITHUB_PAGES"] === "true";
+const base = isGhPages ? "/brilho-desenhos/" : "/";
+
 export default defineConfig({
   vite: {
+    base,
     plugins: [
       VitePWA({
         strategies: "generateSW",
@@ -16,6 +21,8 @@ export default defineConfig({
         injectRegister: null,
         filename: "sw.js",
         manifest: false,
+        base,
+        scope: base,
         devOptions: { enabled: false },
         workbox: {
           navigateFallbackDenylist: [/^\/api\//, /^\/~oauth/],
@@ -39,5 +46,8 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    ...(isGhPages
+      ? { spa: { enabled: true, prerender: { outputPath: "/index.html", crawlLinks: false } } }
+      : {}),
   },
 });
