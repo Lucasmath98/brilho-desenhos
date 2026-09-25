@@ -25,10 +25,10 @@ import { registerAppServiceWorker } from "@/lib/pwa";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Appflix — Seu cantinho de desenhos" },
-      { name: "description", content: "Uma coleção de desenhos infantis para assistir e imaginar em família." },
-      { property: "og:title", content: "Appflix — Seu cantinho de desenhos" },
-      { property: "og:description", content: "Aventuras, bichinhos, clássicos e histórias educativas para crianças." },
+      { title: "Appflix — Seu cantinho com Jesus" },
+      { name: "description", content: "Histórias de Jesus e da Bíblia contadas com carinho para crianças e famílias." },
+      { property: "og:title", content: "Appflix — Seu cantinho com Jesus" },
+      { property: "og:description", content: "Uma coleção cristã infantil sobre Jesus, seus milagres, parábolas, discípulos e ressurreição." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -38,13 +38,6 @@ export const Route = createFileRoute("/")({
 
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 type Screen = { name: "home" } | { name: "categories" } | { name: "profile" } | { name: "category"; title: string } | { name: "detail"; show: Show };
-
-const descriptions: Record<number, string> = {
-  1: "Uma pequena astronauta e uma missão enorme: encontrar a flor mais brilhante da Lua.",
-  2: "Uma turma muito especial descobre que a amizade transforma qualquer ilha em lar.",
-  7: "Cada página abre uma nova aventura no mundo da imaginação.",
-  13: "Bia mergulha em um oceano colorido e encontra amigos surpreendentes.",
-};
 
 function Index() {
   const [screen, setScreen] = useState<Screen>({ name: "home" });
@@ -122,7 +115,7 @@ function HomeScreen({ featured, install, onPlay, onOpenShow, onOpenCategory, onO
     <div className="px-5 pb-8 pt-8">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
         <div className="min-w-0">
-          <p className="text-xs font-extrabold uppercase text-primary">Seu cantinho de desenhos</p>
+          <p className="text-xs font-extrabold uppercase text-primary">Seu cantinho com Jesus</p>
           <h1 className="font-display mt-1 text-[2rem] leading-tight">Oi, pequeno explorador! <span aria-hidden="true">👋</span></h1>
         </div>
         <div className="grid size-16 shrink-0 place-items-center rounded-2xl border border-border bg-card shadow-soft" aria-label="24 desenhos">
@@ -137,7 +130,7 @@ function HomeScreen({ featured, install, onPlay, onOpenShow, onOpenCategory, onO
         <div className="relative flex min-h-[390px] flex-col items-start justify-end p-6">
           <span className="rounded-full bg-card/85 px-3 py-1 text-[10px] font-black uppercase text-primary backdrop-blur-md">Coleção completa</span>
           <h2 className="font-display mt-3 max-w-[290px] text-[2.15rem] leading-[1.05]">{featured.title}</h2>
-          <p className="mt-3 max-w-[310px] text-sm font-semibold leading-relaxed text-foreground/80">{descriptions[featured.id]}</p>
+          <p className="mt-3 max-w-[310px] text-sm font-semibold leading-relaxed text-foreground/80">{featured.description}</p>
           <Button className="mt-5 rounded-full px-6" onClick={() => onPlay(featured)}><Play className="size-4 fill-current" /> Assistir agora</Button>
         </div>
       </section>
@@ -146,7 +139,7 @@ function HomeScreen({ featured, install, onPlay, onOpenShow, onOpenCategory, onO
 
       <SectionHeading title="Categorias" count={shelves.length} action="Ver todas" onAction={onOpenCategories} />
       <div className="grid grid-cols-2 gap-3">
-        {shelves.slice(1, 5).map((shelf, index) => (
+        {shelves.slice(0, 4).map((shelf, index) => (
           <CategoryCard key={shelf.title} shelf={shelf} imageId={shelf.ids[index % shelf.ids.length] ?? shelf.ids[0]} onOpen={() => onOpenCategory(shelf.title)} />
         ))}
       </div>
@@ -210,7 +203,7 @@ function DetailScreen({ show, onBack, onPlay }: { show: Show; onBack: () => void
         <span className="rounded-full bg-card px-3 py-1 text-[10px] font-black uppercase text-primary">Livre para toda família</span>
         <h1 className="font-display mt-3 text-[2.5rem] leading-none">{show.title}</h1>
         <div className="mt-3 flex items-center gap-4 text-xs font-bold text-muted-foreground"><span className="flex items-center gap-1"><Clock3 className="size-4" /> {show.duration}</span><span>{show.age}</span></div>
-        <p className="mt-5 text-sm font-semibold leading-7 text-foreground/75">{descriptions[show.id] ?? "Uma história encantadora, cheia de descobertas, amizade e imaginação para toda a família."}</p>
+        <p className="mt-5 text-sm font-semibold leading-7 text-foreground/75">{show.description}</p>
         <Button size="lg" className="mt-6 w-full rounded-full" onClick={() => onPlay(show)}><Play className="size-5 fill-current" /> Assistir agora</Button>
         <SectionHeading title="Você também pode gostar" count={related.length} />
         <div className="grid grid-cols-2 gap-3">{related.map((item) => <ShowCard key={item.id} show={item} onOpen={() => onPlay(item)} onPlay={() => onPlay(item)} />)}</div>
@@ -227,7 +220,7 @@ function ProfileScreen({ install, onBack }: { install: () => void; onBack: () =>
         <div className="flex flex-col items-center rounded-3xl bg-card px-5 py-8 text-center shadow-soft">
           <div className="grid size-20 place-items-center rounded-full bg-accent text-primary"><UserRound className="size-9" /></div>
           <h2 className="font-display mt-4 text-3xl">Pequeno explorador</h2>
-          <p className="mt-2 max-w-xs text-sm font-semibold leading-relaxed text-muted-foreground">Seu lugar seguro para descobrir histórias, aprender e se divertir em família.</p>
+          <p className="mt-2 max-w-xs text-sm font-semibold leading-relaxed text-muted-foreground">Seu lugar para conhecer Jesus, aprender histórias da Bíblia e crescer em família.</p>
         </div>
         <div className="mt-5 rounded-3xl border border-border bg-card p-5">
           <div className="flex items-start gap-4"><div className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent text-primary"><Download /></div><div><h3 className="font-display text-xl">Leve o Appflix com você</h3><p className="mt-1 text-xs font-semibold leading-relaxed text-muted-foreground">Instale na tela inicial para abrir como um aplicativo.</p></div></div>
@@ -235,7 +228,7 @@ function ProfileScreen({ install, onBack }: { install: () => void; onBack: () =>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <Stat icon={BookOpen} value="24" label="desenhos" />
-          <Stat icon={Shapes} value="7" label="categorias" />
+          <Stat icon={Shapes} value="6" label="categorias" />
         </div>
       </div>
     </div>
@@ -269,7 +262,7 @@ function CategoryCard({ shelf, imageId, onOpen }: { shelf: typeof shelves[number
   const image = shows.find((show) => show.id === imageId)?.image ?? shows[0]?.image;
   return (
     <Button variant="ghost" onClick={onOpen} className="group relative aspect-[4/5] h-auto min-h-0 w-full overflow-hidden rounded-2xl p-0 text-left shadow-soft">
-      {image && <img src={image} alt="" width={768} height={432} className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105" />}
+      {image && <img src={image} alt="" loading="lazy" width={768} height={768} className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105" />}
       <span className="absolute inset-0 bg-card-overlay" />
       <span className="absolute inset-x-3 bottom-3 min-w-0"><strong className="font-display block text-lg leading-tight text-foreground">{shelf.title}</strong><small className="mt-1 block text-[10px] font-bold text-foreground/65">{shelf.ids.length} episódios</small></span>
       <span className="absolute right-3 top-3 grid size-8 place-items-center rounded-full bg-primary text-primary-foreground"><Play className="size-3.5 fill-current" /></span>
@@ -281,7 +274,7 @@ function ShowCard({ show, onOpen, onPlay }: { show: Show; onOpen: () => void; on
   return (
     <article className="overflow-hidden rounded-2xl bg-card shadow-soft">
       <button onClick={onOpen} className="group relative block aspect-[4/3] w-full overflow-hidden text-left" aria-label={`Ver detalhes de ${show.title}`}>
-        <img src={show.image} alt={show.title} width={768} height={432} className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        <img src={show.image} alt={show.title} loading="lazy" width={768} height={768} className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
         <span className="absolute inset-0 bg-thumbnail-overlay" />
       </button>
       <div className="grid min-h-[92px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2 p-3">

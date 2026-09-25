@@ -5,3 +5,4 @@
 - [x] Preservar player, instalação PWA e navegação inferior.
 - [x] Aplicar tipografia serifada, paleta azul-marinho e destaque dourado/laranja.
 - [x] Validar celular, computador e build estático do GitHub Pages.
+- [x] Substituir os 24 desenhos e capas por histórias cristãs infantis sobre Jesus e a Bíblia.
