@@ -40,6 +40,8 @@ function Index() {
     if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) setShowIos(true);
   };
   const filtered = useMemo(() => query ? shows.filter((show) => show.title.toLowerCase().includes(query.toLowerCase())) : [], [query]);
+  const featured = shows.find((show) => show.id === 1);
+  if (!featured) return null;
 
   return (
     <main className="min-h-screen bg-background pb-24 text-foreground md:pb-8">
@@ -52,7 +54,7 @@ function Index() {
             <span className="mb-3 inline-flex rounded-full bg-primary px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-primary-foreground">Em destaque</span>
             <h1 className="max-w-2xl text-4xl font-black leading-tight sm:text-6xl lg:text-7xl">O Foguete do Formiguinha</h1>
             <p className="mt-4 max-w-lg text-base font-semibold text-foreground/85 sm:text-lg">Uma pequena astronauta e uma missão enorme: encontrar a flor mais brilhante da Lua.</p>
-            <Button size="lg" className="mt-6" onClick={() => setActive(shows[0])}><Play className="size-5 fill-current" /> Assistir</Button>
+            <Button size="lg" className="mt-6" onClick={() => setActive(featured)}><Play className="size-5 fill-current" /> Assistir</Button>
           </div>
         </section>
         <div id="categorias" className="relative z-20 -mt-8 space-y-9 md:-mt-12">
@@ -75,7 +77,7 @@ function Header({ searchOpen, setSearchOpen, query, setQuery, install }: { searc
 
 function Shelf({ shelf, onPlay, delay }: { shelf: typeof shelves[number]; onPlay: (show: Show) => void; delay: number }) {
   const rail = useRef<HTMLDivElement>(null);
-  const items = shelf.ids.map((id) => shows[id - 1]);
+  const items = shelf.ids.map((id) => shows.find((show) => show.id === id)).filter((show): show is Show => Boolean(show));
   const move = (dir: number) => rail.current?.scrollBy({ left: dir * rail.current.clientWidth * .8, behavior: "smooth" });
   return <section className="shelf-reveal" style={{ animationDelay: `${delay * 55}ms` }}><div className="mb-3 flex items-center justify-between px-4 sm:px-8 lg:px-14"><h2 className="text-xl font-black sm:text-2xl">{shelf.title}</h2><div className="hidden gap-1 md:flex"><Button variant="ghost" size="icon" aria-label="Voltar" onClick={()=>move(-1)}><ChevronLeft/></Button><Button variant="ghost" size="icon" aria-label="Avançar" onClick={()=>move(1)}><ChevronRight/></Button></div></div><div ref={rail} className="hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:px-8 lg:px-14">{items.map((show)=><ShowCard key={show.id} show={show} onPlay={onPlay}/>)}</div></section>;
 }

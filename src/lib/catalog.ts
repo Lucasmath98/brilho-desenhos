@@ -4,7 +4,7 @@ export type Show = {
   image: string;
   duration: string;
   age: string;
-  progress?: number;
+  progress: number | undefined;
   source: { type: "youtube"; id: string } | { type: "video"; url: string };
 };
 
@@ -18,17 +18,22 @@ const titles = [
   "Bebês Dinossauros", "A Dança da Chuva", "A Raposa e o Girassol", "Estrelinhas Sonolentas",
 ];
 
-export const shows: Show[] = titles.map((title, index) => ({
+export const shows: Show[] = titles.map((title, index) => {
+  const image = images[`../assets/shows/show-${String(index + 1).padStart(2, "0")}.jpg`];
+  if (!image) throw new Error(`Capa não encontrada para ${title}`);
+  const source: Show["source"] = index === 13
+    ? { type: "video", url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" }
+    : { type: "youtube", id: "M7lc1UVf-VE" };
+  return {
   id: index + 1,
   title,
-  image: images[`../assets/shows/show-${String(index + 1).padStart(2, "0")}.jpg`],
+  image,
   duration: index > 17 ? `${3 + (index % 3)} min` : `${8 + (index % 14)} min`,
   age: "Livre",
   progress: index < 5 ? [38, 72, 19, 54, 84][index] : undefined,
-  source: index === 13
-    ? { type: "video", url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" }
-    : { type: "youtube", id: "M7lc1UVf-VE" },
-}));
+  source,
+  };
+});
 
 export const shelves = [
   { title: "Continue Assistindo", ids: [1, 4, 8, 13, 17] },
