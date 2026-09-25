@@ -1,128 +1,351 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Home, Search, Shapes, UserRound, Play, Pause, Volume2, VolumeX, X, ChevronLeft, ChevronRight, Maximize, Share, Sparkles, Flame } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  ChevronRight,
+  Clock3,
+  Download,
+  Home,
+  Maximize,
+  Pause,
+  Play,
+  Share,
+  Shapes,
+  Sparkles,
+  UserRound,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { shelves, shows, type Show } from "@/lib/catalog";
 import { registerAppServiceWorker } from "@/lib/pwa";
-import heroImage from "@/assets/shows/show-01.jpg";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [
-    { title: "Appflix — Desenhos para pequenas grandes imaginações" },
-    { name: "description", content: "Uma seleção divertida de desenhos infantis para assistir em família." },
-    { property: "og:title", content: "Appflix — Desenhos infantis" },
-    { property: "og:description", content: "Aventuras, bichinhos, clássicos e histórias educativas para crianças." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Appflix — Seu cantinho de desenhos" },
+      { name: "description", content: "Uma coleção de desenhos infantis para assistir e imaginar em família." },
+      { property: "og:title", content: "Appflix — Seu cantinho de desenhos" },
+      { property: "og:description", content: "Aventuras, bichinhos, clássicos e histórias educativas para crianças." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
 type InstallPrompt = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
+type Screen = { name: "home" } | { name: "categories" } | { name: "profile" } | { name: "category"; title: string } | { name: "detail"; show: Show };
+
+const descriptions: Record<number, string> = {
+  1: "Uma pequena astronauta e uma missão enorme: encontrar a flor mais brilhante da Lua.",
+  2: "Uma turma muito especial descobre que a amizade transforma qualquer ilha em lar.",
+  7: "Cada página abre uma nova aventura no mundo da imaginação.",
+  13: "Bia mergulha em um oceano colorido e encontra amigos surpreendentes.",
+};
 
 function Index() {
+  const [screen, setScreen] = useState<Screen>({ name: "home" });
   const [active, setActive] = useState<Show | null>(null);
-  const [query, setQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null);
   const [showIos, setShowIos] = useState(false);
+  const featured = shows[0];
 
   useEffect(() => {
     registerAppServiceWorker();
-    const listener = (event: Event) => { event.preventDefault(); setInstallPrompt(event as InstallPrompt); };
+    const listener = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPrompt);
+    };
     window.addEventListener("beforeinstallprompt", listener);
     return () => window.removeEventListener("beforeinstallprompt", listener);
   }, []);
 
-  const install = async () => {
-    if (installPrompt) { await installPrompt.prompt(); setInstallPrompt(null); return; }
-    const ua = navigator.userAgent;
-    if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) setShowIos(true);
-  };
-  const filtered = useMemo(() => query ? shows.filter((show) => show.title.toLowerCase().includes(query.toLowerCase())) : [], [query]);
-  const featured = shows.find((show) => show.id === 1);
+  useEffect(() => window.scrollTo({ top: 0, behavior: "smooth" }), [screen]);
+
   if (!featured) return null;
 
+  const install = async () => {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      setInstallPrompt(null);
+      return;
+    }
+    const ua = navigator.userAgent;
+    if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
+      setShowIos(true);
+    }
+  };
+
+  const openHome = () => setScreen({ name: "home" });
+  const openCategories = () => setScreen({ name: "categories" });
+  const openProfile = () => setScreen({ name: "profile" });
+  const openDetail = (show: Show) => setScreen({ name: "detail", show });
+
   return (
-    <main className="min-h-screen bg-background pb-24 text-foreground md:pb-8">
-      <Header searchOpen={searchOpen} setSearchOpen={setSearchOpen} query={query} setQuery={setQuery} install={install} />
-      {searchOpen && query ? <SearchResults shows={filtered} onPlay={setActive} /> : <>
-        <MobileHome install={install} />
-        <section id="inicio" className="relative hidden min-h-[82vh] items-end overflow-hidden min-[481px]:flex">
-          <img src={heroImage} alt="Formiguinha astronauta ao lado de seu foguete" width={768} height={432} className="absolute inset-0 size-full object-cover" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_top,var(--background)_2%,transparent_70%),linear-gradient(to_right,var(--background)_0%,transparent_75%)]" />
-          <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 pb-16 sm:px-8 md:pb-24 lg:px-14">
-            <span className="mb-3 inline-flex rounded-full bg-primary px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-primary-foreground">Em destaque</span>
-            <h1 className="max-w-2xl text-4xl font-black leading-tight sm:text-6xl lg:text-7xl">O Foguete do Formiguinha</h1>
-            <p className="mt-4 max-w-lg text-base font-semibold text-foreground/85 sm:text-lg">Uma pequena astronauta e uma missão enorme: encontrar a flor mais brilhante da Lua.</p>
-            <div className="mt-6 flex flex-wrap gap-3"><Button size="lg" onClick={() => setActive(featured)}><Play className="size-5 fill-current" /> Assistir</Button><Button variant="glass" size="lg" className="sm:hidden" onClick={install}><Download className="size-5" /> Instalar</Button></div>
-          </div>
-        </section>
-        <div id="categorias" className="relative z-20 space-y-9 max-[480px]:pt-3 min-[481px]:-mt-8 md:-mt-12">
-          {shelves.map((shelf, index) => <Shelf key={shelf.title} shelf={shelf} delay={index} onPlay={setActive} />)}
-        </div>
-      </>}
-      <BottomNav onSearch={() => setSearchOpen(true)} install={install} />
+    <div className="min-h-screen bg-surround">
+      <main className="relative mx-auto min-h-screen w-full max-w-[430px] overflow-hidden bg-background pb-24 text-foreground shadow-app">
+        {screen.name === "home" && (
+          <HomeScreen
+            featured={featured}
+            install={install}
+            onPlay={setActive}
+            onOpenShow={openDetail}
+            onOpenCategory={(title) => setScreen({ name: "category", title })}
+            onOpenCategories={openCategories}
+          />
+        )}
+        {screen.name === "categories" && <CategoriesScreen onBack={openHome} onOpen={(title) => setScreen({ name: "category", title })} />}
+        {screen.name === "category" && <CategoryScreen title={screen.title} onBack={openCategories} onOpenShow={openDetail} onPlay={setActive} />}
+        {screen.name === "detail" && <DetailScreen show={screen.show} onBack={openHome} onPlay={setActive} />}
+        {screen.name === "profile" && <ProfileScreen install={install} onBack={openHome} />}
+        <BottomNav active={screen.name} onHome={openHome} onCategories={openCategories} onProfile={openProfile} />
+      </main>
       {active && <VideoPlayer show={active} onClose={() => setActive(null)} />}
-      {showIos && <div className="fixed inset-x-4 bottom-24 z-[70] mx-auto max-w-sm rounded-lg border border-border bg-surface-raised p-4 shadow-2xl"><button aria-label="Fechar instruções" onClick={() => setShowIos(false)} className="float-right text-muted-foreground"><X /></button><p className="font-extrabold">Instalar no iPhone</p><p className="mt-2 text-sm text-muted-foreground">Toque em <Share className="mx-1 inline size-4" /> Compartilhar e depois em “Adicionar à Tela de Início”.</p></div>}
-    </main>
+      {showIos && <IosInstall onClose={() => setShowIos(false)} />}
+    </div>
   );
 }
 
-function MobileHome({ install }: { install: () => void }) {
-  const newest = shows.find((show) => show.id === 19);
-  const popular = shows.find((show) => show.id === 2);
-  return <section id="inicio-mobile" className="px-4 pb-6 pt-24 min-[481px]:hidden">
-    <p className="text-lg font-extrabold text-muted-foreground">Oi, pequeno explorador! <span aria-hidden="true">👋</span></p>
-    <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-y border-border py-4">
-      <strong className="text-5xl font-black text-primary">24</strong>
-      <span className="max-w-32 text-sm font-bold leading-tight text-foreground">desenhos disponíveis</span>
+function HomeScreen({ featured, install, onPlay, onOpenShow, onOpenCategory, onOpenCategories }: {
+  featured: Show;
+  install: () => void;
+  onPlay: (show: Show) => void;
+  onOpenShow: (show: Show) => void;
+  onOpenCategory: (title: string) => void;
+  onOpenCategories: () => void;
+}) {
+  const continueShows = shows.filter((show) => show.progress !== undefined);
+  return (
+    <div className="px-5 pb-8 pt-8">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-extrabold uppercase text-primary">Seu cantinho de desenhos</p>
+          <h1 className="font-display mt-1 text-[2rem] leading-tight">Oi, pequeno explorador! <span aria-hidden="true">👋</span></h1>
+        </div>
+        <div className="grid size-16 shrink-0 place-items-center rounded-2xl border border-border bg-card shadow-soft" aria-label="24 desenhos">
+          <strong className="font-display text-3xl text-primary">24</strong>
+          <span className="-mt-3 text-[9px] font-bold uppercase text-muted-foreground">desenhos</span>
+        </div>
+      </header>
+
+      <section className="relative mt-7 min-h-[390px] overflow-hidden rounded-3xl bg-card shadow-soft">
+        <img src={featured.image} alt={featured.title} width={768} height={432} className="absolute inset-0 size-full object-cover" />
+        <div className="absolute inset-0 bg-feature-overlay" />
+        <div className="relative flex min-h-[390px] flex-col items-start justify-end p-6">
+          <span className="rounded-full bg-card/85 px-3 py-1 text-[10px] font-black uppercase text-primary backdrop-blur-md">Coleção completa</span>
+          <h2 className="font-display mt-3 max-w-[290px] text-[2.15rem] leading-[1.05]">{featured.title}</h2>
+          <p className="mt-3 max-w-[310px] text-sm font-semibold leading-relaxed text-foreground/80">{descriptions[featured.id]}</p>
+          <Button className="mt-5 rounded-full px-6" onClick={() => onPlay(featured)}><Play className="size-4 fill-current" /> Assistir agora</Button>
+        </div>
+      </section>
+
+      <InstallBanner onInstall={install} />
+
+      <SectionHeading title="Categorias" count={shelves.length} action="Ver todas" onAction={onOpenCategories} />
+      <div className="grid grid-cols-2 gap-3">
+        {shelves.slice(1, 5).map((shelf, index) => (
+          <CategoryCard key={shelf.title} shelf={shelf} imageId={shelf.ids[index % shelf.ids.length] ?? shelf.ids[0]} onOpen={() => onOpenCategory(shelf.title)} />
+        ))}
+      </div>
+
+      <SectionHeading title="Continue assistindo" count={continueShows.length} />
+      <div className="grid grid-cols-2 gap-3">
+        {continueShows.slice(0, 4).map((show) => <ShowCard key={show.id} show={show} onOpen={() => onOpenShow(show)} onPlay={() => onPlay(show)} />)}
+      </div>
+
+      <SectionHeading title="Todos os desenhos" count={shows.length} />
+      <div className="grid grid-cols-2 gap-3">
+        {shows.slice(5, 11).map((show) => <ShowCard key={show.id} show={show} onOpen={() => onOpenShow(show)} onPlay={() => onPlay(show)} />)}
+      </div>
     </div>
-    <h1 className="mt-7 text-3xl font-black leading-tight">Desenhos Animados para Toda Família</h1>
-    <p className="mt-3 max-w-sm text-sm font-semibold leading-relaxed text-muted-foreground">Aventuras divertidas, histórias educativas e novos amigos para curtir juntos.</p>
-    <div className="mt-7 grid grid-cols-2 gap-3">
-      {newest && <button onClick={() => { location.hash = "desenhos-em-alta" }} className="group relative aspect-[4/5] overflow-hidden rounded-lg text-left" aria-label="Ver Novidades da Semana">
-        <img src={newest.image} alt="" width={768} height={432} className="size-full object-cover transition-transform duration-300 group-active:scale-105" />
-        <span className="absolute inset-0 bg-[linear-gradient(transparent_30%,var(--background))]" />
-        <span className="absolute inset-x-3 bottom-3"><Sparkles className="mb-2 size-6 text-primary"/><strong className="block text-lg leading-tight">Novidades da Semana</strong><small className="mt-1 block font-bold text-muted-foreground">Ver seleção</small></span>
-      </button>}
-      {popular && <button onClick={() => { location.hash = "continue-assistindo" }} className="group relative aspect-[4/5] overflow-hidden rounded-lg text-left" aria-label="Ver Mais Assistidos">
-        <img src={popular.image} alt="" width={768} height={432} className="size-full object-cover transition-transform duration-300 group-active:scale-105" />
-        <span className="absolute inset-0 bg-[linear-gradient(transparent_30%,var(--background))]" />
-        <span className="absolute inset-x-3 bottom-3"><Flame className="mb-2 size-6 text-primary"/><strong className="block text-lg leading-tight">Mais Assistidos</strong><small className="mt-1 block font-bold text-muted-foreground">Ver seleção</small></span>
-      </button>}
+  );
+}
+
+function ScreenHeader({ eyebrow, title, onBack }: { eyebrow: string; title: string; onBack: () => void }) {
+  return (
+    <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-5 pb-5 pt-7">
+      <Button variant="ghost" size="icon" onClick={onBack} aria-label="Voltar" className="rounded-full bg-card"><ArrowLeft /></Button>
+      <div className="min-w-0"><p className="text-[10px] font-black uppercase text-primary">{eyebrow}</p><h1 className="font-display truncate text-3xl">{title}</h1></div>
+    </header>
+  );
+}
+
+function CategoriesScreen({ onBack, onOpen }: { onBack: () => void; onOpen: (title: string) => void }) {
+  return (
+    <div className="pb-8">
+      <ScreenHeader eyebrow="Explore por tema" title="Categorias" onBack={onBack} />
+      <div className="grid grid-cols-2 gap-3 px-5">
+        {shelves.map((shelf, index) => <CategoryCard key={shelf.title} shelf={shelf} imageId={shelf.ids[index % shelf.ids.length] ?? shelf.ids[0]} onOpen={() => onOpen(shelf.title)} />)}
+      </div>
     </div>
-    <Button variant="glass" className="mt-4 w-full" onClick={install}><Download className="size-5" /> Instalar Appflix</Button>
-  </section>;
+  );
 }
 
-function Header({ searchOpen, setSearchOpen, query, setQuery, install }: { searchOpen: boolean; setSearchOpen: (v: boolean) => void; query: string; setQuery: (v: string) => void; install: () => void }) {
-  return <header className="fixed inset-x-0 top-0 z-50 bg-background/75 backdrop-blur-xl"><div className="mx-auto grid h-16 max-w-[1600px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-8 lg:px-14">
-    <div className="flex min-w-0 items-center gap-8"><a href="#inicio" className="shrink-0 text-2xl font-black text-primary">APPFLIX</a><nav className="hidden items-center gap-6 text-sm font-bold md:flex"><a href="#inicio">Início</a><a href="#categorias">Categorias</a><button onClick={() => setSearchOpen(true)}>Buscar</button></nav></div>
-    <div className="flex shrink-0 items-center gap-1">{searchOpen && <div className="absolute inset-x-3 top-2 flex h-12 items-center gap-2 rounded-md border border-border bg-surface-raised px-3 sm:static sm:w-72"><Search className="size-5 shrink-0"/><input autoFocus value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Buscar desenhos" className="min-w-0 flex-1 bg-transparent text-sm outline-none"/><button aria-label="Fechar busca" onClick={()=>{setSearchOpen(false);setQuery("")}}><X className="size-5"/></button></div>} {!searchOpen && <Button variant="ghost" size="icon" aria-label="Buscar" onClick={()=>setSearchOpen(true)}><Search /></Button>}<Button variant="ghost" size="icon" aria-label="Perfil"><UserRound /></Button><Button className="hidden sm:inline-flex" onClick={install}><Download className="size-4"/> Baixar app</Button></div>
-  </div></header>;
+function CategoryScreen({ title, onBack, onOpenShow, onPlay }: { title: string; onBack: () => void; onOpenShow: (show: Show) => void; onPlay: (show: Show) => void }) {
+  const shelf = shelves.find((item) => item.title === title);
+  const items = shelf?.ids.map((id) => shows.find((show) => show.id === id)).filter((show): show is Show => Boolean(show)) ?? [];
+  return (
+    <div className="pb-8">
+      <ScreenHeader eyebrow={`${items.length} desenhos`} title={title} onBack={onBack} />
+      <div className="grid grid-cols-2 gap-3 px-5">
+        {items.map((show) => <ShowCard key={show.id} show={show} onOpen={() => onOpenShow(show)} onPlay={() => onPlay(show)} />)}
+      </div>
+    </div>
+  );
 }
 
-function Shelf({ shelf, onPlay, delay }: { shelf: typeof shelves[number]; onPlay: (show: Show) => void; delay: number }) {
-  const rail = useRef<HTMLDivElement>(null);
-  const items = shelf.ids.map((id) => shows.find((show) => show.id === id)).filter((show): show is Show => Boolean(show));
-  const move = (dir: number) => rail.current?.scrollBy({ left: dir * rail.current.clientWidth * .8, behavior: "smooth" });
-  const sectionId = shelf.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-  return <section id={sectionId} className="shelf-reveal scroll-mt-20" style={{ animationDelay: `${delay * 55}ms` }}><div className="mb-3 flex items-center justify-between px-4 sm:px-8 lg:px-14"><h2 className="text-xl font-black sm:text-2xl">{shelf.title}</h2><div className="hidden gap-1 md:flex"><Button variant="ghost" size="icon" aria-label="Voltar" onClick={()=>move(-1)}><ChevronLeft/></Button><Button variant="ghost" size="icon" aria-label="Avançar" onClick={()=>move(1)}><ChevronRight/></Button></div></div><div ref={rail} className="hide-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:px-8 lg:px-14">{items.map((show)=><ShowCard key={show.id} show={show} onPlay={onPlay}/>)}</div></section>;
+function DetailScreen({ show, onBack, onPlay }: { show: Show; onBack: () => void; onPlay: (show: Show) => void }) {
+  const related = shows.filter((item) => item.id !== show.id).slice(0, 4);
+  return (
+    <div className="pb-8">
+      <div className="relative h-[330px] overflow-hidden">
+        <img src={show.image} alt={show.title} width={768} height={432} className="size-full object-cover" />
+        <div className="absolute inset-0 bg-detail-overlay" />
+        <Button variant="player" size="icon" onClick={onBack} aria-label="Voltar" className="absolute left-5 top-6 rounded-full"><ArrowLeft /></Button>
+      </div>
+      <div className="relative -mt-16 px-5">
+        <span className="rounded-full bg-card px-3 py-1 text-[10px] font-black uppercase text-primary">Livre para toda família</span>
+        <h1 className="font-display mt-3 text-[2.5rem] leading-none">{show.title}</h1>
+        <div className="mt-3 flex items-center gap-4 text-xs font-bold text-muted-foreground"><span className="flex items-center gap-1"><Clock3 className="size-4" /> {show.duration}</span><span>{show.age}</span></div>
+        <p className="mt-5 text-sm font-semibold leading-7 text-foreground/75">{descriptions[show.id] ?? "Uma história encantadora, cheia de descobertas, amizade e imaginação para toda a família."}</p>
+        <Button size="lg" className="mt-6 w-full rounded-full" onClick={() => onPlay(show)}><Play className="size-5 fill-current" /> Assistir agora</Button>
+        <SectionHeading title="Você também pode gostar" count={related.length} />
+        <div className="grid grid-cols-2 gap-3">{related.map((item) => <ShowCard key={item.id} show={item} onOpen={() => onPlay(item)} onPlay={() => onPlay(item)} />)}</div>
+      </div>
+    </div>
+  );
 }
 
-function ShowCard({ show, onPlay }: { show: Show; onPlay: (show: Show) => void }) {
-  return <button onClick={()=>onPlay(show)} className="group w-[72vw] max-w-[280px] shrink-0 snap-start text-left sm:w-[34vw] md:w-[25vw] lg:w-[19vw]" aria-label={`Assistir ${show.title}`}><div className="relative aspect-video overflow-hidden rounded-md bg-card transition-transform duration-300 group-hover:scale-[1.04] group-focus-visible:ring-2 group-focus-visible:ring-ring"><img src={show.image} alt="" loading="lazy" width={768} height={432} className="size-full object-cover"/><div className="absolute inset-0 flex items-center justify-center bg-background/0 transition-colors group-hover:bg-background/30"><span className="grid size-12 scale-75 place-items-center rounded-full bg-primary text-primary-foreground opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100"><Play className="size-5 fill-current"/></span></div>{show.progress != null && <div className="absolute inset-x-2 bottom-2 h-1 overflow-hidden rounded-full bg-foreground/25"><div className="h-full bg-primary" style={{width:`${show.progress}%`}}/></div>}</div><h3 className="mt-2 truncate text-sm font-extrabold sm:text-base">{show.title}</h3><p className="text-xs font-semibold text-muted-foreground">{show.age} · {show.duration}</p></button>;
+function ProfileScreen({ install, onBack }: { install: () => void; onBack: () => void }) {
+  return (
+    <div className="pb-8">
+      <ScreenHeader eyebrow="Seu espaço" title="Perfil" onBack={onBack} />
+      <div className="px-5">
+        <div className="flex flex-col items-center rounded-3xl bg-card px-5 py-8 text-center shadow-soft">
+          <div className="grid size-20 place-items-center rounded-full bg-accent text-primary"><UserRound className="size-9" /></div>
+          <h2 className="font-display mt-4 text-3xl">Pequeno explorador</h2>
+          <p className="mt-2 max-w-xs text-sm font-semibold leading-relaxed text-muted-foreground">Seu lugar seguro para descobrir histórias, aprender e se divertir em família.</p>
+        </div>
+        <div className="mt-5 rounded-3xl border border-border bg-card p-5">
+          <div className="flex items-start gap-4"><div className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent text-primary"><Download /></div><div><h3 className="font-display text-xl">Leve o Appflix com você</h3><p className="mt-1 text-xs font-semibold leading-relaxed text-muted-foreground">Instale na tela inicial para abrir como um aplicativo.</p></div></div>
+          <Button className="mt-5 w-full rounded-full" onClick={install}><Download className="size-4" /> Instalar app</Button>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <Stat icon={BookOpen} value="24" label="desenhos" />
+          <Stat icon={Shapes} value="7" label="categorias" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function SearchResults({ shows: results, onPlay }: { shows: Show[]; onPlay: (show: Show)=>void }) { return <section className="mx-auto min-h-screen max-w-[1600px] px-4 pb-24 pt-24 sm:px-8 lg:px-14"><h1 className="text-3xl font-black">Buscar</h1><p className="mt-2 text-muted-foreground">{results.length} resultado(s)</p><div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">{results.map(show=><ShowCard key={show.id} show={show} onPlay={onPlay}/>)}</div></section> }
+function Stat({ icon: Icon, value, label }: { icon: typeof BookOpen; value: string; label: string }) {
+  return <div className="rounded-2xl bg-card p-4"><Icon className="size-5 text-primary" /><strong className="font-display mt-3 block text-3xl">{value}</strong><span className="text-xs font-bold text-muted-foreground">{label}</span></div>;
+}
 
-function BottomNav({ onSearch: _onSearch, install }: { onSearch: ()=>void; install: ()=>void }) { const items = [{label:"Início",icon:Home,action:()=>location.hash="inicio-mobile"},{label:"Categorias",icon:Shapes,action:()=>location.hash="categorias"},{label:"Perfil",icon:UserRound,action:install}]; return <nav className="fixed inset-x-0 bottom-0 z-50 grid h-20 grid-cols-3 border-t border-border bg-background/95 px-4 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl min-[481px]:hidden">{items.map(({label,icon:Icon,action})=><button key={label} onClick={action} className="flex min-w-0 flex-col items-center justify-center gap-1 text-[11px] font-bold text-muted-foreground first:text-primary"><Icon className="size-6"/><span className="truncate">{label}</span></button>)}</nav> }
+function InstallBanner({ onInstall }: { onInstall: () => void }) {
+  return (
+    <button onClick={onInstall} className="mt-4 grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:bg-accent" aria-label="Instalar Appflix">
+      <span className="grid size-9 place-items-center rounded-xl bg-accent text-primary"><Download className="size-4" /></span>
+      <span className="min-w-0"><strong className="block text-xs">Instale o Appflix</strong><small className="block truncate text-[10px] font-semibold text-muted-foreground">Seu cantinho, sempre por perto</small></span>
+      <ChevronRight className="size-4 text-muted-foreground" />
+    </button>
+  );
+}
 
-function VideoPlayer({ show, onClose }: { show: Show; onClose: ()=>void }) {
-  const [playing,setPlaying]=useState(true); const [muted,setMuted]=useState(false); const [progress,setProgress]=useState(12); const video=useRef<HTMLVideoElement>(null); const iframe=useRef<HTMLIFrameElement>(null);
-  const command=(func:string)=>iframe.current?.contentWindow?.postMessage(JSON.stringify({event:"command",func,args:[]}),"*");
-  const toggle=()=>{setPlaying(v=>!v); if(show.source.type==="youtube") command(playing?"pauseVideo":"playVideo"); else if(video.current) playing?video.current.pause():video.current.play();};
-  useEffect(()=>{ const key=(e:KeyboardEvent)=>{if(e.key==="Escape")onClose()}; addEventListener("keydown",key); return()=>removeEventListener("keydown",key)},[onClose]);
-  return <div className="fixed inset-0 z-[80] flex flex-col bg-background" role="dialog" aria-modal="true" aria-label={`Player de ${show.title}`}><div className="relative flex flex-1 items-center justify-center overflow-hidden bg-background">{show.source.type==="youtube"?<iframe ref={iframe} title={show.title} className="aspect-video w-full max-h-full" src={`https://www.youtube-nocookie.com/embed/${show.source.id}?autoplay=1&controls=0&rel=0&modestbranding=1&enablejsapi=1&playsinline=1`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/>:<video ref={video} autoPlay playsInline muted={muted} src={show.source.url} className="max-h-full w-full" onTimeUpdate={(e)=>setProgress((e.currentTarget.currentTime/e.currentTarget.duration)*100)}/>}<Button variant="player" size="icon" onClick={onClose} aria-label="Fechar player" className="absolute right-4 top-4"><X/></Button></div><div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(transparent,var(--background))] px-4 pb-5 pt-20 sm:px-8"><input aria-label="Progresso do vídeo" type="range" min="0" max="100" value={progress} onChange={(e)=>{setProgress(Number(e.target.value)); if(video.current?.duration) video.current.currentTime=video.current.duration*Number(e.target.value)/100}} className="h-1 w-full accent-primary"/><div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2"><Button variant="player" size="icon" onClick={toggle} aria-label={playing?"Pausar":"Reproduzir"}>{playing?<Pause/>:<Play/>}</Button><div className="min-w-0"><p className="truncate font-black">{show.title}</p><p className="text-xs text-muted-foreground">{show.duration} · {show.age}</p></div><div className="flex"><Button variant="player" size="icon" aria-label={muted?"Ativar som":"Desativar som"} onClick={()=>{setMuted(v=>!v); if(show.source.type==="youtube")command(muted?"unMute":"mute")}}>{muted?<VolumeX/>:<Volume2/>}</Button><Button variant="player" size="icon" aria-label="Tela cheia" onClick={()=>document.documentElement.requestFullscreen?.()}><Maximize/></Button></div></div></div></div>;
+function SectionHeading({ title, count, action, onAction }: { title: string; count: number; action?: string; onAction?: () => void }) {
+  return (
+    <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 pb-3">
+      <div className="min-w-0"><h2 className="font-display truncate text-[1.65rem]">{title}</h2><p className="text-[10px] font-bold uppercase text-muted-foreground">{count} {count === 1 ? "item" : "itens"}</p></div>
+      {action && <Button variant="ghost" className="h-9 min-h-9 rounded-full px-3 text-xs text-primary" onClick={onAction}>{action}</Button>}
+    </div>
+  );
+}
+
+function CategoryCard({ shelf, imageId, onOpen }: { shelf: typeof shelves[number]; imageId: number | undefined; onOpen: () => void }) {
+  const image = shows.find((show) => show.id === imageId)?.image ?? shows[0]?.image;
+  return (
+    <Button variant="ghost" onClick={onOpen} className="group relative aspect-[4/5] h-auto min-h-0 w-full overflow-hidden rounded-2xl p-0 text-left shadow-soft">
+      {image && <img src={image} alt="" width={768} height={432} className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105" />}
+      <span className="absolute inset-0 bg-card-overlay" />
+      <span className="absolute inset-x-3 bottom-3 min-w-0"><strong className="font-display block text-lg leading-tight text-foreground">{shelf.title}</strong><small className="mt-1 block text-[10px] font-bold text-foreground/65">{shelf.ids.length} episódios</small></span>
+      <span className="absolute right-3 top-3 grid size-8 place-items-center rounded-full bg-primary text-primary-foreground"><Play className="size-3.5 fill-current" /></span>
+    </Button>
+  );
+}
+
+function ShowCard({ show, onOpen, onPlay }: { show: Show; onOpen: () => void; onPlay: () => void }) {
+  return (
+    <article className="overflow-hidden rounded-2xl bg-card shadow-soft">
+      <button onClick={onOpen} className="group relative block aspect-[4/3] w-full overflow-hidden text-left" aria-label={`Ver detalhes de ${show.title}`}>
+        <img src={show.image} alt={show.title} width={768} height={432} className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        <span className="absolute inset-0 bg-thumbnail-overlay" />
+      </button>
+      <div className="grid min-h-[92px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2 p-3">
+        <button onClick={onOpen} className="min-w-0 text-left"><strong className="font-display line-clamp-2 block text-base leading-tight">{show.title}</strong><small className="mt-1 block text-[10px] font-bold text-muted-foreground">{show.duration} · {show.age}</small></button>
+        <Button size="icon" onClick={onPlay} className="size-9 min-h-9 rounded-full" aria-label={`Assistir ${show.title}`}><Play className="size-3.5 fill-current" /></Button>
+      </div>
+      {show.progress !== undefined && <div className="h-1 bg-muted"><div className="h-full bg-primary" style={{ width: `${show.progress}%` }} /></div>}
+    </article>
+  );
+}
+
+function BottomNav({ active, onHome, onCategories, onProfile }: { active: Screen["name"]; onHome: () => void; onCategories: () => void; onProfile: () => void }) {
+  const items = [
+    { label: "Início", icon: Home, selected: active === "home" || active === "detail", action: onHome },
+    { label: "Categorias", icon: Shapes, selected: active === "categories" || active === "category", action: onCategories },
+    { label: "Perfil", icon: UserRound, selected: active === "profile", action: onProfile },
+  ];
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto grid h-[76px] w-full max-w-[430px] grid-cols-3 border-t border-border bg-nav px-5 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl" aria-label="Navegação principal">
+      {items.map(({ label, icon: Icon, selected, action }) => <Button key={label} variant="ghost" onClick={action} className={`h-full min-h-0 flex-col gap-1 rounded-none text-[10px] ${selected ? "text-primary" : "text-muted-foreground"}`}><Icon className="size-5" /><span>{label}</span></Button>)}
+    </nav>
+  );
+}
+
+function VideoPlayer({ show, onClose }: { show: Show; onClose: () => void }) {
+  const [playing, setPlaying] = useState(true);
+  const [muted, setMuted] = useState(false);
+  const [progress, setProgress] = useState(show.progress ?? 0);
+  const video = useRef<HTMLVideoElement>(null);
+  const iframe = useRef<HTMLIFrameElement>(null);
+  const player = useRef<HTMLDivElement>(null);
+  const command = (func: string) => iframe.current?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*");
+  const toggle = () => {
+    setPlaying((value) => !value);
+    if (show.source.type === "youtube") command(playing ? "pauseVideo" : "playVideo");
+    else if (video.current) playing ? video.current.pause() : void video.current.play();
+  };
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    addEventListener("keydown", key);
+    return () => removeEventListener("keydown", key);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-[80] bg-surround" role="dialog" aria-modal="true" aria-label={`Player de ${show.title}`}>
+      <div ref={player} className="relative mx-auto flex min-h-screen w-full max-w-[430px] flex-col bg-background shadow-app">
+        <header className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-4 py-4"><Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar player" className="rounded-full bg-card"><X /></Button><div className="min-w-0"><p className="text-[10px] font-black uppercase text-primary">Assistindo agora</p><h1 className="font-display truncate text-xl">{show.title}</h1></div></header>
+        <div className="relative flex flex-1 items-center overflow-hidden bg-player-surface">
+          {show.source.type === "youtube" ? <iframe ref={iframe} title={show.title} className="aspect-video w-full" src={`https://www.youtube-nocookie.com/embed/${show.source.id}?autoplay=1&controls=0&rel=0&modestbranding=1&enablejsapi=1&playsinline=1`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <video ref={video} autoPlay playsInline muted={muted} src={show.source.url} className="w-full" onTimeUpdate={(event) => { const duration = event.currentTarget.duration; if (duration) setProgress((event.currentTarget.currentTime / duration) * 100); }} />}
+        </div>
+        <div className="bg-card px-5 pb-8 pt-5">
+          <input aria-label="Progresso do vídeo" type="range" min="0" max="100" value={progress} onChange={(event) => { const value = Number(event.target.value); setProgress(value); if (video.current?.duration) video.current.currentTime = video.current.duration * value / 100; }} className="h-1 w-full accent-primary" />
+          <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3"><Button size="icon" onClick={toggle} aria-label={playing ? "Pausar" : "Reproduzir"} className="rounded-full">{playing ? <Pause /> : <Play />}</Button><div className="min-w-0"><p className="font-display truncate text-lg">{show.title}</p><p className="text-[10px] font-bold text-muted-foreground">{show.duration} · {show.age}</p></div><div className="flex"><Button variant="ghost" size="icon" aria-label={muted ? "Ativar som" : "Desativar som"} onClick={() => { setMuted((value) => !value); if (show.source.type === "youtube") command(muted ? "unMute" : "mute"); }}>{muted ? <VolumeX /> : <Volume2 />}</Button><Button variant="ghost" size="icon" aria-label="Tela cheia" onClick={() => player.current?.requestFullscreen?.()}><Maximize /></Button></div></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IosInstall({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-end bg-modal px-4 pb-6" role="dialog" aria-modal="true" aria-label="Instalar no iPhone">
+      <div className="mx-auto w-full max-w-[398px] rounded-3xl border border-border bg-card p-5 shadow-app">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3"><div><p className="font-display text-2xl">Instalar no iPhone</p><p className="mt-2 text-sm font-semibold leading-relaxed text-muted-foreground">Toque em <Share className="mx-1 inline size-4" /> Compartilhar e depois em “Adicionar à Tela de Início”.</p></div><Button variant="ghost" size="icon" aria-label="Fechar instruções" onClick={onClose}><X /></Button></div>
+      </div>
+    </div>
+  );
 }
